@@ -5,7 +5,7 @@
 #include <iostream>
 #include "MassSpringSystem.h"
 #include <functional>
-
+#include <direct.h>
 
 template<class T, int dim>
 class SimulationDriver{
@@ -31,10 +31,10 @@ public:
     void run(const int max_frame)
     {
         T accumulate_t = 0;
-        mkdir("output/", 0777);
-        std::string output_folder = "output/" + test;
-        mkdir(output_folder.c_str(), 0777);
-        std::string filename = output_folder + "/" + std::to_string(0) + ".poly";
+        mkdir("output\\");
+        std::string output_folder = "output\\" + test;
+        mkdir(output_folder.c_str());
+        std::string filename = output_folder + "\\" + std::to_string(0) + ".poly";
         ms.dumpPoly(filename);
         for(int frame=1; frame<=max_frame; frame++) {
             std::cout << "Frame " << frame << std::endl;
@@ -45,10 +45,10 @@ public:
                 advanceOneStepExplicitIntegration();
                 accumulate_t += dt;
             }
-            mkdir("output/", 0777);
-            std::string output_folder = "output/" + test;
-            mkdir(output_folder.c_str(), 0777);
-            std::string filename = output_folder + "/" + std::to_string(frame) + ".poly";
+            mkdir("output\\");
+            std::string output_folder = "output\\" + test;
+            mkdir(output_folder.c_str());
+            std::string filename = output_folder + "\\" + std::to_string(frame) + ".poly";
             ms.dumpPoly(filename);
             std::cout << std::endl;
         }

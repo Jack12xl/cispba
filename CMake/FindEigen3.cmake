@@ -1,7 +1,7 @@
 # - Try to find Eigen3 lib
 #
 # This module supports requiring a minimum version, e.g. you can do
-#   find_package(Eigen3 3.1.2)
+# find_package(Eigen3 3.1.2)
 # to require version 3.1.2 or newer of Eigen3.
 #
 # Once done this will define
@@ -14,7 +14,7 @@
 # Copyright (c) 2008, 2009 Gael Guennebaud, <g.gael@free.fr>
 # Copyright (c) 2009 Benoit Jacob <jacob.benoit.1@gmail.com>
 # Redistribution and use is allowed according to the terms of the 2-clause BSD license.
-
+set(EIGEN3_INCLUDE_DIR "C:\\Program Files\\eigen-3.3.7\\")
 if(NOT Eigen3_FIND_VERSION)
   if(NOT Eigen3_FIND_VERSION_MAJOR)
     set(Eigen3_FIND_VERSION_MAJOR 2)
