@@ -3,16 +3,9 @@
 
 int main(int argc, char* argv[])
 {
-    using T = float;
-    constexpr int dim = 3;
-    using TV = Eigen::Matrix<T,dim,1>;
+    
 
     SimulationDriver<T,dim> driver;
-
-    // set up mass spring system
-    T youngs_modulus = 0;
-    T damping_coeff = 0; 
-    T dt = 0;
 
     // node data
     std::vector<T> m;
@@ -41,6 +34,88 @@ int main(int argc, char* argv[])
             5. Generate quad mesh for rendering.
         */
         //1. Create node data : position, mass, velocity
+        assert(X_RES >= 2);
+        assert(Y_RES >= 2);
+
+        m.resize(numPoint, uniform_M);
+        
+        v.resize(numPoint, TV::Zero());
+        x.resize(numPoint, TV::Zero());
+        for (int i = 0; i < X_RES; i++) {
+            for (int j = 0; j < Y_RES; j++) {
+                int idx = i * Y_RES + j;
+                x[idx](0) = (float)i;
+                x[idx](1) = (float)j;
+                x[idx](2) = 0.0f;
+            }
+        }
+
+        node_is_fixed.resize(numPoint, false);
+#pragma region addSpring
+        // vertical struct spring
+        for (int i = 0; i < X_RES - 1; i++) {
+            for (int j = 0; j < Y_RES; j++) {
+                Eigen::Matrix<int, 2, 1> cur_seg;
+                int p1 = i * Y_RES + j, p2 = (i + 1) * Y_RES + j;
+                cur_seg << p1, p2;
+                segments.emplace_back(cur_seg);
+                rest_length.emplace_back( (x[p1] - x[p2] ).norm());
+            }
+        }
+        // horizontal struct spring
+        for (int i = 0; i < X_RES ; i++) {
+            for (int j = 0; j < Y_RES - 1; j++) {
+                Eigen::Matrix<int, 2, 1> cur_seg;
+                int p1 = i * Y_RES + j, p2 = i * Y_RES + j + 1;
+                cur_seg << p1, p2;
+                segments.emplace_back(cur_seg);
+                rest_length.emplace_back((x[p1] - x[p2]).norm());
+            }
+        }
+
+        // up left 2 bottom right shear
+        for (int i = 0; i < X_RES - 1; i++) {
+            for (int j = 0; j < Y_RES - 1; j++) {
+                Eigen::Matrix<int, 2, 1> cur_seg;
+                int p1 = i * Y_RES + j, p2 = (i + 1) * Y_RES + j + 1;
+                cur_seg << p1, p2;
+                segments.emplace_back(cur_seg);
+                rest_length.emplace_back((x[p1] - x[p2]).norm());
+            }
+        }
+
+        // bottom left 2 up right  shear
+        for (int i = 1; i < X_RES; i++) {
+            for (int j = 0; j < Y_RES - 1; j++) {
+                Eigen::Matrix<int, 2, 1> cur_seg;
+                int p1 = i * Y_RES + j, p2 = (i - 1) * Y_RES + j + 1;
+                cur_seg << p1, p2;
+                segments.emplace_back(cur_seg);
+                rest_length.emplace_back((x[p1] - x[p2]).norm());
+            }
+        }
+
+        // bent horizontal
+        for (int i = 0; i < X_RES ; i++) {
+            for (int j = 0; j < Y_RES - 2; j++) {
+                Eigen::Matrix<int, 2, 1> cur_seg;
+                int p1 = i * Y_RES + j, p2 = i  * Y_RES + j + 2;
+                cur_seg << p1, p2;
+                segments.emplace_back(cur_seg);
+                rest_length.emplace_back((x[p1] - x[p2]).norm());
+            }
+        }
+
+        for (int i = 0; i < X_RES - 2; i++) {
+            for (int j = 0; j < Y_RES; j++) {
+                Eigen::Matrix<int, 2, 1> cur_seg;
+                int p1 = i * Y_RES + j, p2 = (i + 2) * Y_RES + j;
+                cur_seg << p1, p2;
+                segments.emplace_back(cur_seg);
+                rest_length.emplace_back((x[p1] - x[p2]).norm());
+            }
+        }
+#pragma endregion
 
         driver.helper = [&](T t, T dt) {
             // TODO
