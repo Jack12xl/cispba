@@ -5,6 +5,11 @@
 #include <string>
 #include <fstream>
 
+enum class updateScheme {
+    ForwardEuler,
+    BackwardEuler
+};
+
 template<class T, int dim>
 class MassSpringSystem{
 public:
@@ -19,8 +24,12 @@ public:
     std::vector<bool> node_is_fixed;
     std::vector<T> rest_length;
 
+    updateScheme m_method;
+
     MassSpringSystem()
-    {}
+    {
+        this -> m_method = updateScheme::ForwardEuler;
+    }
 
     void evaluateSpringForces(std::vector<TV >& f)
     {
@@ -52,5 +61,26 @@ public:
             fs << ++count << ": " << seg(0) + 1 << " " << seg(1) + 1 << "\n"; // poly segment mesh is 1-indexed
         fs << "END\n";
         fs.close();
+    }
+
+    void SubstepUpdate(const std::vector<TV >& f_spring, const std::vector<TV >& f_damping, const TV& gravity) {
+        
+        int num_p = x.size();
+        assert(f_spring.size() == num_p);
+        assert(f_damping.size() == num_p);
+        if (m_method == updateScheme::ForwardEuler) {
+            for (int p = 0; p < num_p; p++) {
+                if (this->node_is_fixed[p]) {
+                    this->v[p] = TV::Zero();
+                }
+                else {
+                    this->v[p] += ( ( f_spring[p] + f_damping[p] ) / m[p] + gravity) * dt;
+                    this->x[p] += this->v[p] * dt;
+                }
+            }
+        }
+        else {
+            std::cout << "not implemented yet !!" << std::endl;
+        }
     }
 };

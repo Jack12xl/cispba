@@ -34,6 +34,7 @@ int main(int argc, char* argv[])
             5. Generate quad mesh for rendering.
         */
         //1. Create node data : position, mass, velocity
+#pragma region node_data_fill_segments
         assert(X_RES >= 2);
         assert(Y_RES >= 2);
 
@@ -116,6 +117,18 @@ int main(int argc, char* argv[])
             }
         }
 #pragma endregion
+#pragma endregion
+        youngs_modulus = 6.2f;
+        damping_coeff = 0.04;
+        dt = 0.005f;
+
+        // boundary
+        // hold two up corner
+        node_is_fixed[0] = true;
+        node_is_fixed[0 + Y_RES - 1] = true;
+        
+        // TODO Generate quad mesh for rendering.
+
 
         driver.helper = [&](T t, T dt) {
             // TODO

@@ -62,5 +62,6 @@ public:
 	    ms.evaluateDampingForces(f_damping);
         
         // TODO: update position and velocity according to Newton's law.
+        ms.SubstepUpdate(f_spring, f_damping, gravity);
     }
 };
