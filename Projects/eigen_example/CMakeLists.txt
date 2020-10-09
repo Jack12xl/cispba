@@ -8,6 +8,13 @@ if(CREATE_LOCAL_MAKEFILES)
   configure_file(${CISPBA_SOURCE_DIR}/Scripts/Makefile.in ${CMAKE_CURRENT_SOURCE_DIR}/Makefile @ONLY)
 endif()
 
+set(headers
+    MassSpringSystem.h
+    SimulationDriver.h
+)
+
+source_group(Headers FILES ${headers})
+
 # Configure this project
 add_cispba_executable(eigen_example main.cpp)
 target_include_directories(eigen_example SYSTEM PUBLIC ${EIGEN3_INCLUDE_DIR})

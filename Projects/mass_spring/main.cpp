@@ -1,15 +1,5 @@
-#include <Eigen/Core>
-#include <Eigen/Dense>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <ctime>
-#include <cstdlib>
-#include <random>
-#include <chrono>
-#include <unordered_set>
+#include "main.h"
 
-#include "SimulationDriver.h"
 
 int main(int argc, char* argv[])
 {
@@ -50,6 +40,8 @@ int main(int argc, char* argv[])
             4. Set boundary condition (node_is_fixed) and helper function (to achieve moving boundary condition).
             5. Generate quad mesh for rendering.
         */
+        //1. Create node data : position, mass, velocity
+
         driver.helper = [&](T t, T dt) {
             // TODO
         };
