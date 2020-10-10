@@ -26,6 +26,9 @@ public:
 
     updateScheme m_method;
 
+    std::vector<TV> f_spring;
+    std::vector<TV> f_damping;
+
     MassSpringSystem()
     {
         this -> m_method = updateScheme::ForwardEuler;
@@ -34,11 +37,40 @@ public:
     void evaluateSpringForces(std::vector<TV >& f)
     {
         // TODO: evaluate spring force
+        //init 
+        f.resize( m.size(), TV::Zero() );
+        
+        assert(segments.size() == rest_length.size());
+        for (int i = 0; i < segments.size(); i ++) {
+            int p1 = segments[i](0), p2 = segments[i](1);
+
+            T l_0 = rest_length[i];
+            T l = (x[p1] - x[p2]).norm();
+            TV n_12 = ( x[p1] - x[p2] ).normalized();
+            
+            TV tmp = -youngs_modulus * (l / l_0 - 1.0f) * n_12;
+            f[p1] += tmp;
+            f[p2] += -tmp;
+        }
     }
 
     void evaluateDampingForces(std::vector<TV >& f)
     {
         // TODO: evaluate damping force
+
+        f.resize(m.size(), TV::Zero());
+
+        assert(segments.size() == rest_length.size());
+        for (int i = 0; i < segments.size(); i++) {
+            int p1 = segments[i](0), p2 = segments[i](1);
+
+            TV n_12 = (x[p1] - x[p2]).normalized();
+            TV v_rel = (v[p1] - v[p2]).cwiseProduct(n_12);
+
+            TV tmp = -damping_coeff * v_rel.cwiseProduct(n_12);
+            f[p1] += tmp;
+            f[p2] += -tmp;
+        }
     }
 
     void dumpPoly(std::string filename)

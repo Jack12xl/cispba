@@ -57,8 +57,11 @@ public:
     void advanceOneStepExplicitIntegration()
     {
         std::vector<TV> f_spring;
+        
         ms.evaluateSpringForces(f_spring);
+
 	    std::vector<TV> f_damping;
+        
 	    ms.evaluateDampingForces(f_damping);
         
         // TODO: update position and velocity according to Newton's law.
