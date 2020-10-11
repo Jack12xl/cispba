@@ -21,11 +21,13 @@ public:
 
     std::function<void(T, T)> helper = [&](T, T) {};
 
-    SimulationDriver()
+    SimulationDriver(  )
     : dt((T)0.00001) // 0.0015 for implicit
     {
         gravity.setZero();
         gravity(1) = -9.8;
+
+        ms.m_method = updateScheme::SymplecticEuler;
     }
 
     void run(const int max_frame)

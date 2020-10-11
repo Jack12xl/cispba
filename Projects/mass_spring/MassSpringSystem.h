@@ -7,6 +7,7 @@
 
 enum class updateScheme {
     ForwardEuler,
+    SymplecticEuler,
     BackwardEuler
 };
 
@@ -100,19 +101,23 @@ public:
         int num_p = x.size();
         assert(f_spring.size() == num_p);
         assert(f_damping.size() == num_p);
-        if (m_method == updateScheme::ForwardEuler) {
-            for (int p = 0; p < num_p; p++) {
-                if (this->node_is_fixed[p]) {
-                    this->v[p] = TV::Zero();
+        for (int p = 0; p < num_p; p++) {
+            if (this->node_is_fixed[p]) {
+                this->v[p] = TV::Zero();
+            }
+            else {
+
+                if (m_method == updateScheme::ForwardEuler) {
+                    this->x[p] += this->v[p] * dt;
+                    this->v[p] += ((f_spring[p] + f_damping[p]) / m[p] + gravity) * dt;
                 }
-                else {
-                    this->v[p] += ( ( f_spring[p] + f_damping[p] ) / m[p] + gravity) * dt;
+                else if (m_method == updateScheme::SymplecticEuler) {
+                    this->v[p] += ((f_spring[p] + f_damping[p]) / m[p] + gravity) * dt;
                     this->x[p] += this->v[p] * dt;
                 }
+
+                
             }
-        }
-        else {
-            std::cout << "not implemented yet !!" << std::endl;
-        }
+        }       
     }
 };
