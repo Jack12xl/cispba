@@ -9,6 +9,7 @@
 #include <random>
 #include <chrono>
 #include <unordered_set>
+#include <set>
 
 #include "SimulationDriver.h"
 #include "utils.h"
@@ -34,3 +35,13 @@ T uniform_M = 0.1f;
 
 float X_offset = 0.0f, Y_offset = 0.0f, Z_offset = 0.0f;
 float X_d = 0.1f, Y_d = 0.1f;
+
+// control the cloth to move
+#define Z_move 1
+#define X_move 1
+const float Z_amplitude = 1.0f;
+const float Z_omega = 0.6f * PI;
+
+const float X_amplitude = 1.0f;
+const float X_omega = 0.4f * PI;
+

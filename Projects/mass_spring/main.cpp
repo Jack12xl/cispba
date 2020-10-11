@@ -30,14 +30,14 @@ void dumpObj(
             fs << "\n";
         }
     }
-    fs << "End of files";
+    fs << "##End of files";
     fs.close();
     
 }
 
 void read_point(
     const std::string & file_path,
-    std::vector<TV> m_x
+    std::vector<TV>& m_x
 ) {
     std::ifstream fp_in;
     int numFace, cur_dim;
@@ -80,7 +80,9 @@ void read_point(
 
 void read_cell(
     const std::string& file_path,
-    std::vector<TV>& _segments
+    std::vector<Eigen::Matrix<int, 2, 1> >& _segments,
+    const std::vector<TV>& _x,
+    std::vector<T>& _rest_length
 ) {
     std::ifstream fp_in;
     int numTetrahedra, dim;
@@ -90,6 +92,8 @@ void read_cell(
         std::cout << "Error reading from file - aborting!" << std::endl;
         throw;
     }
+
+    std::set< Eigen::Matrix<int, 2, 1> > m_set;
 
     int line_num = 0;
     while (fp_in.good()) {
@@ -106,6 +110,22 @@ void read_cell(
 
             }
             else {
+                Eigen::Matrix<int, 2, 1> cur_seg = Eigen::Matrix<int, 2, 1>::Zero();
+                
+                // insert the bunny structure 
+                // a tetra
+                for (int i = 0; i < dim ; i++) {
+                    int p_0 = atoi(tokens[i].c_str());
+                    int p_1 = atoi(tokens[(i + 1) % dim].c_str());
+                    
+                    cur_seg(0) = std::min(p_0, p_1);
+                    cur_seg(1) = std::max(p_0, p_1);
+                    
+                    auto insert_result = m_set.insert(cur_seg);
+                    if (insert_result.second) {
+                        _rest_length.emplace_back((_x[p_0] - _x[p_1]).norm());
+                    }
+                }
                 
 
             }
@@ -113,8 +133,20 @@ void read_cell(
         }
 
     }
-    assert(line_num == m_x.size());
+    _segments.assign( m_set.begin(), m_set.end() );
+    assert(_segments.size() <= line_num);
+    std::cout << "In all " << _segments.size() << " segments !" << std::endl;
+    assert(line_num == _x.size());
 }
+
+struct seg_cmp {
+    bool operator() (
+        const Eigen::Matrix<int, 2, 1>& lhs,
+        const Eigen::Matrix<int, 2, 1>& rhs
+        ) const {
+        return lhs(0) < rhs(0) && lhs(1) < rhs(1);
+    }
+};
 
 int main(int argc, char* argv[])
 {
@@ -247,16 +279,21 @@ int main(int argc, char* argv[])
         // TODO Generate quad mesh for rendering.
         dumpObj("cloth.obj", x);
 
+        const float x_right_up_offset = x[X_RES * Y_RES - 1](0);
         driver.helper = [&](T t, T dt) {
             // TODO
-            //TV& p_left_up = driver.ms.x[Y_RES - 1];
-            //TV& p_right_up = driver.ms.x[X_RES * Y_RES - 1];
+            TV& p_left_up = driver.ms.x[Y_RES - 1];
+            TV& p_right_up = driver.ms.x[X_RES * Y_RES - 1];
+#if Z_move
+            p_left_up(2) = Z_amplitude * sin(Z_omega * t);
+            p_right_up(2) = Z_amplitude * sin(Z_omega * t);
+#endif // Z_move
 
-            //TV z_speed; z_speed(2) = 15.0f;
-           // p_left_up += dt * z_speed;
-           // p_right_up += dt * z_speed;
-            //p_left_up(2) = 10.0f * t;
-            //p_right_up(2) = 10.0f * t;
+            
+#if X_move
+            p_left_up(0) = X_amplitude * sin(X_amplitude * t);
+            p_right_up(0) = X_amplitude * sin(X_amplitude * (-t)) + x_right_up_offset;
+#endif
         };
         driver.test="cloth";
     }
@@ -270,8 +307,15 @@ int main(int argc, char* argv[])
             3. Choose proper youngs_modulus, damping_coeff, dt; 
             4. Set boundary condition (node_is_fixed) and helper function (to achieve moving boundary condition).
         */
+        // 1, 2
+        read_point("./data/points", x);
+        read_cell("./data/cells", 
+            segments, 
+            x,
+            rest_length);
 
-
+        node_is_fixed.resize(x.size(), false);
+        node_is_fixed[0] = true;
 
         driver.helper = [&](T t, T dt) {
             // TODO

@@ -103,7 +103,7 @@ public:
         assert(f_damping.size() == num_p);
         for (int p = 0; p < num_p; p++) {
             if (this->node_is_fixed[p]) {
-                this->v[p] = TV::Zero();
+                //this->v[p] = TV::Zero();
             }
             else {
 
