@@ -17,7 +17,7 @@
 // resolution
 const int X_RES = 32;
 const int Y_RES = 32;
-const int numPoint = X_RES * Y_RES;
+int numPoint = X_RES * Y_RES;
 
 using T = float;
 constexpr int dim = 3;

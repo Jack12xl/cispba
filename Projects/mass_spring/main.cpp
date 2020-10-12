@@ -59,24 +59,37 @@ void read_point(
             if (line_num == 0) {
                 numFace = atoi(tokens[0].c_str());
                 cur_dim = atoi(tokens[1].c_str());
-                std::cout << "In all " << numFace << " faces."<< std::endl;
+                std::cout << "In total " << numFace << " faces."<< std::endl;
                 
             }
             else {
                 TV cur_x;
-                for (int i = 0; i < dim; i++) {
+                /*for (int i = 0; i < dim; i++) {
                     cur_x << atoi(tokens[i].c_str());
+                }*/
+                cur_x <<
+                    atoi(tokens[0].c_str()),
+                    atoi(tokens[1].c_str()),
+                    atoi(tokens[2].c_str());
 
-                }
                 m_x.push_back(cur_x);
             }
             line_num++;
         }
 
     }
-    assert(line_num == m_x.size());
+    assert(line_num - 1 == m_x.size());
     assert(cur_dim == dim);
 }
+
+struct seg_cmp {
+    bool operator() (
+        const Eigen::Matrix<int, 2, 1>& lhs,
+        const Eigen::Matrix<int, 2, 1>& rhs
+        ) const {
+        return lhs(0) < rhs(0) && lhs(1) < rhs(1);
+    }
+};
 
 void read_cell(
     const std::string& file_path,
@@ -93,7 +106,7 @@ void read_cell(
         throw;
     }
 
-    std::set< Eigen::Matrix<int, 2, 1> > m_set;
+    std::set< Eigen::Matrix<int, 2, 1>, seg_cmp > m_set;
 
     int line_num = 0;
     while (fp_in.good()) {
@@ -126,8 +139,6 @@ void read_cell(
                         _rest_length.emplace_back((_x[p_0] - _x[p_1]).norm());
                     }
                 }
-                
-
             }
             line_num++;
         }
@@ -136,17 +147,9 @@ void read_cell(
     _segments.assign( m_set.begin(), m_set.end() );
     assert(_segments.size() <= line_num);
     std::cout << "In all " << _segments.size() << " segments !" << std::endl;
-    assert(line_num == _x.size());
 }
 
-struct seg_cmp {
-    bool operator() (
-        const Eigen::Matrix<int, 2, 1>& lhs,
-        const Eigen::Matrix<int, 2, 1>& rhs
-        ) const {
-        return lhs(0) < rhs(0) && lhs(1) < rhs(1);
-    }
-};
+
 
 int main(int argc, char* argv[])
 {
@@ -184,8 +187,6 @@ int main(int argc, char* argv[])
 #pragma region node_data_fill_segments
         assert(X_RES >= 2);
         assert(Y_RES >= 2);
-
-        
 
         m.resize(numPoint, uniform_M);
         
@@ -308,13 +309,17 @@ int main(int argc, char* argv[])
             4. Set boundary condition (node_is_fixed) and helper function (to achieve moving boundary condition).
         */
         // 1, 2
-        read_point("./data/points", x);
-        read_cell("./data/cells", 
+        read_point("E:\\Jack12\\cis563-pba\\proj1_explicit_mass_spring\\Projects\\mass_spring\\data\\points", x);
+        read_cell("E:\\Jack12\\cis563-pba\\proj1_explicit_mass_spring\\Projects\\mass_spring\\data\\cells", 
             segments, 
             x,
             rest_length);
 
-        node_is_fixed.resize(x.size(), false);
+        numPoint = x.size();
+        v.resize(numPoint, TV::Zero());
+        m.resize(numPoint, uniform_M);
+
+        node_is_fixed.resize(numPoint, false);
         node_is_fixed[0] = true;
 
         driver.helper = [&](T t, T dt) {
