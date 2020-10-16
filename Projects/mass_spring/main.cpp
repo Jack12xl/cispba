@@ -340,12 +340,15 @@ int main(int argc, char* argv[])
         node_is_fixed.resize(numPoint, false);
         node_is_fixed[1271] = true; // left ear
         node_is_fixed[1207] = true; // right ear
-        node_is_fixed[1049] = true; // tail ear
+        node_is_fixed[1049] = true; // tail
 
         driver.helper = [&](T t, T dt) {
             // TODO
             TV& tail_p = driver.ms.x[1049];
             tail_p(2) += 0.1f * dt;
+            if (t > 2.5f) {
+                driver.ms.node_is_fixed[1049] = false;
+            }
         };
         driver.test="bunny";
     }

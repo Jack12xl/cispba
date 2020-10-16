@@ -1043,3 +1043,4 @@ dkms.conf
 *.exr
 Projects/mass_spring/data/cloth/*
 Projects/mass_spring/data/render/*
+Projects/mass_spring/data/bunny/*
