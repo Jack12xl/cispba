@@ -42,6 +42,6 @@ float X_d = 0.1f, Y_d = 0.1f;
 const float Z_amplitude = 1.0f;
 const float Z_omega = 0.6f * PI;
 
-const float X_amplitude = 1.0f;
-const float X_omega = 0.4f * PI;
+const float X_amplitude = 1.5f;
+const float X_omega = 0.6f * PI;
 

@@ -14,20 +14,33 @@ void dumpObj(
     for (auto X : _x) {
         fs << "v" ;
         for (int i = 0; i < dim; i++)
-            fs << " " << X(i);
+            fs << " " << float(X(i));
         if (dim == 2)
             fs << " 0";
         fs << "\n";
     }
 
-    for (int i = 0; i < X_RES; i++) {
-        for (int j = 0; j < Y_RES; j++) {
-            fs << "f";
-            fs << " " << i * Y_RES + j ;
-            fs << " " << (i + 1) * Y_RES + j;
+    for (int i = 0; i < X_RES - 1; i++) {
+        for (int j = 0; j < Y_RES - 1; j++) {
+            /*fs << "f";
+            fs << " " << i * Y_RES + j + 1 ;
             fs << " " << (i + 1) * Y_RES + j + 1;
-            fs << " " << i * Y_RES + j + 1;
+            fs << " " << (i + 1) * Y_RES + j + 1 + 1;
             fs << "\n";
+
+            fs << "f";
+            fs << " " << i * Y_RES + j + 1;
+            fs << " " << (i + 1) * Y_RES + j + 1 + 1;
+            fs << " " << i * Y_RES + j + 1 + 1;
+            fs << "\n";*/
+
+            fs << "f";
+            fs << " " << i * Y_RES + j + 1;
+            fs << " " << (i + 1) * Y_RES + j + 1;
+            fs << " " << (i + 1) * Y_RES + j + 1 + 1;
+            fs << " " << i * Y_RES + j + 1 + 1;
+            fs << "\n";
+            
         }
     }
     fs << "##End of files";
@@ -68,9 +81,9 @@ void read_point(
                     cur_x << atoi(tokens[i].c_str());
                 }*/
                 cur_x <<
-                    atoi(tokens[0].c_str()),
-                    atoi(tokens[1].c_str()),
-                    atoi(tokens[2].c_str());
+                    atof(tokens[0].c_str()),
+                    atof(tokens[1].c_str()),
+                    atof(tokens[2].c_str());
 
                 m_x.push_back(cur_x);
             }
@@ -87,7 +100,7 @@ struct seg_cmp {
         const Eigen::Matrix<int, 2, 1>& lhs,
         const Eigen::Matrix<int, 2, 1>& rhs
         ) const {
-        return lhs(0) < rhs(0) && lhs(1) < rhs(1);
+        return lhs(0) < rhs(0) || (lhs(0) == rhs(0) && lhs(1) < rhs(1)) ;
     }
 };
 
@@ -105,7 +118,7 @@ void read_cell(
         std::cout << "Error reading from file - aborting!" << std::endl;
         throw;
     }
-
+    // do not want to introduce hash function, so I use m_set
     std::set< Eigen::Matrix<int, 2, 1>, seg_cmp > m_set;
 
     int line_num = 0;
@@ -136,6 +149,7 @@ void read_cell(
                     
                     auto insert_result = m_set.insert(cur_seg);
                     if (insert_result.second) {
+                        _segments.emplace_back(cur_seg);
                         _rest_length.emplace_back((_x[p_0] - _x[p_1]).norm());
                     }
                 }
@@ -144,8 +158,7 @@ void read_cell(
         }
 
     }
-    _segments.assign( m_set.begin(), m_set.end() );
-    assert(_segments.size() <= line_num);
+    //_segments.assign( m_set.begin(), m_set.end() );
     std::cout << "In all " << _segments.size() << " segments !" << std::endl;
 }
 
@@ -292,8 +305,8 @@ int main(int argc, char* argv[])
 
             
 #if X_move
-            p_left_up(0) = X_amplitude * sin(X_amplitude * t);
-            p_right_up(0) = X_amplitude * sin(X_amplitude * (-t)) + x_right_up_offset;
+            p_left_up(0) = X_amplitude * sin(X_omega * t);
+            p_right_up(0) = X_amplitude * sin(X_omega * (-t)) + x_right_up_offset;
 #endif
         };
         driver.test="cloth";
@@ -309,21 +322,30 @@ int main(int argc, char* argv[])
             4. Set boundary condition (node_is_fixed) and helper function (to achieve moving boundary condition).
         */
         // 1, 2
-        read_point("E:\\Jack12\\cis563-pba\\proj1_explicit_mass_spring\\Projects\\mass_spring\\data\\points", x);
+        read_point("E:\\Jack12\\cis563-pba\\proj1_explicit_mass_spring\\Projects\\mass_spring\\data\\points", 
+            x);
         read_cell("E:\\Jack12\\cis563-pba\\proj1_explicit_mass_spring\\Projects\\mass_spring\\data\\cells", 
             segments, 
             x,
             rest_length);
+
+        youngs_modulus = 128.0f;
+        damping_coeff = 8.0f;
+        dt = 0.0005f;
 
         numPoint = x.size();
         v.resize(numPoint, TV::Zero());
         m.resize(numPoint, uniform_M);
 
         node_is_fixed.resize(numPoint, false);
-        node_is_fixed[0] = true;
+        node_is_fixed[1271] = true; // left ear
+        node_is_fixed[1207] = true; // right ear
+        node_is_fixed[1049] = true; // tail ear
 
         driver.helper = [&](T t, T dt) {
             // TODO
+            TV& tail_p = driver.ms.x[1049];
+            tail_p(2) += 0.1f * dt;
         };
         driver.test="bunny";
     }
