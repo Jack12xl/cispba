@@ -26,7 +26,7 @@ using TV = Eigen::Matrix<T, dim, 1>;
 
 // set up mass spring system
 T youngs_modulus = 256.0f;
-T damping_coeff = 16.0f;
+T damping_coeff = 4.0f;
 T dt = 0.001;
 
 const int total_sequence_num = 120;
@@ -44,4 +44,3 @@ const float Z_omega = 0.6f * PI;
 
 const float X_amplitude = 1.5f;
 const float X_omega = 0.6f * PI;
-
