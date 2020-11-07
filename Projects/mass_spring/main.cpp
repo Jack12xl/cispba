@@ -1,10 +1,122 @@
 #include "main.h"
 
+void read_point(
+    const std::string& file_path,
+    std::vector<TV>& m_x
+) {
+    std::ifstream fp_in;
+    int numFace, cur_dim;
+
+    fp_in.open(file_path);
+    if (!fp_in.is_open()) {
+        std::cout << "Error reading from file - aborting!" << std::endl;
+        throw;
+    }
+
+    int line_num = 0;
+    while (fp_in.good()) {
+        std::string line;
+        utility::safeGetline(fp_in, line);
+
+        if (!line.empty()) {
+            std::vector<std::string> tokens = utility::tokenizeString(line);
+
+            if (line_num == 0) {
+                numFace = atoi(tokens[0].c_str());
+                cur_dim = atoi(tokens[1].c_str());
+                std::cout << "In total " << numFace << " faces." << std::endl;
+
+            }
+            else {
+                TV cur_x;
+                /*for (int i = 0; i < dim; i++) {
+                    cur_x << atoi(tokens[i].c_str());
+                }*/
+                cur_x <<
+                    atof(tokens[0].c_str()),
+                    atof(tokens[1].c_str()),
+                    atof(tokens[2].c_str());
+
+                m_x.push_back(cur_x);
+            }
+            line_num++;
+        }
+
+    }
+    assert(line_num - 1 == m_x.size());
+    assert(cur_dim == dim);
+}
+
+struct seg_cmp {
+    bool operator() (
+        const Eigen::Matrix<int, 2, 1>& lhs,
+        const Eigen::Matrix<int, 2, 1>& rhs
+        ) const {
+        return lhs(0) < rhs(0) || (lhs(0) == rhs(0) && lhs(1) < rhs(1));
+    }
+};
+
+void read_cell(
+    const std::string& file_path,
+    std::vector<Eigen::Matrix<int, 2, 1> >& _segments,
+    const std::vector<TV>& _x,
+    std::vector<T>& _rest_length
+) {
+    std::ifstream fp_in;
+    int numTetrahedra, dim;
+
+    fp_in.open(file_path);
+    if (!fp_in.is_open()) {
+        std::cout << "Error reading from file - aborting!" << std::endl;
+        throw;
+    }
+    // do not want to introduce hash function, so I use m_set
+    std::set< Eigen::Matrix<int, 2, 1>, seg_cmp > m_set;
+
+    int line_num = 0;
+    while (fp_in.good()) {
+        std::string line;
+        utility::safeGetline(fp_in, line);
+
+        if (!line.empty()) {
+            std::vector<std::string> tokens = utility::tokenizeString(line);
+
+            if (line_num == 0) {
+                numTetrahedra = atoi(tokens[0].c_str());
+                dim = atoi(tokens[1].c_str());
+                std::cout << "In all " << numTetrahedra << " tetrahedras." << std::endl;
+
+            }
+            else {
+                Eigen::Matrix<int, 2, 1> cur_seg = Eigen::Matrix<int, 2, 1>::Zero();
+
+                // insert the bunny structure 
+                // a tetra
+                for (int i = 0; i < dim; i++) {
+                    int p_0 = atoi(tokens[i].c_str());
+                    int p_1 = atoi(tokens[(i + 1) % dim].c_str());
+
+                    cur_seg(0) = std::min(p_0, p_1);
+                    cur_seg(1) = std::max(p_0, p_1);
+
+                    auto insert_result = m_set.insert(cur_seg);
+                    if (insert_result.second) {
+                        _segments.emplace_back(cur_seg);
+                        _rest_length.emplace_back((_x[p_0] - _x[p_1]).norm());
+                    }
+                }
+            }
+            line_num++;
+        }
+
+    }
+    //_segments.assign( m_set.begin(), m_set.end() );
+    std::cout << "In all " << _segments.size() << " segments !" << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
-    using T = float;
-    constexpr int dim = 3;
-    using TV = Eigen::Matrix<T,dim,1>;
+    
 
     SimulationDriver<T,dim> driver;
 
@@ -25,7 +137,7 @@ int main(int argc, char* argv[])
 
     if (argc < 2) 
     {
-        std::cout << "Please indicate test case number: 0 (cloth) or 1 (volumetric bunny)" << std::endl;
+        std::cout << "Please indicate test case number: 0 (bunny) or 1 (brush)" << std::endl;
         exit(0);
     }
 
@@ -39,6 +151,26 @@ int main(int argc, char* argv[])
             
             The output folder will automatically renamed by bunny_[youngs_modulus], don't worry about overwriting.
         */
+        // 1. Copy the loading codes from your hw1.Fix two ears(2140, 2346) only, and you don't need helper function here.
+        read_point("E:\\Jack12\\cis563-pba\\proj1_explicit_mass_spring\\Projects\\mass_spring\\data\\points",
+            x);
+        read_cell("E:\\Jack12\\cis563-pba\\proj1_explicit_mass_spring\\Projects\\mass_spring\\data\\cells",
+            segments,
+            x,
+            rest_length);
+
+        // 2. Set the initial velocities of non_fixed_nodes to be (10, 0, 0)
+        numPoint = x.size();
+        TV v_non_fixed_nodes;
+        v_non_fixed_nodes << 10, 0, 0;
+
+        v.resize(numPoint, v_non_fixed_nodes);
+        v[2140] = TV::Zero();
+        v[2346] = TV::Zero();
+        node_is_fixed[2140] = true;
+        node_is_fixed[2346] = true;
+        m.resize(numPoint, uniform_M);
+
         std::stringstream ss;
         ss << std::fixed << std::setprecision(2) << youngs_modulus;
         driver.test="bunny_"+ss.str();

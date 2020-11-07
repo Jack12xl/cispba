@@ -31,7 +31,7 @@ public:
     std::function<void(T, T)> helper = [&](T, T) {};
 
     SimulationDriver()
-    : dt((T)0.00001) // 0.0015 for implicit
+    : dt((T)0.0015) // 0.0015 for implicit
     {
         gravity.setZero();
         gravity(1) = -9.8;
