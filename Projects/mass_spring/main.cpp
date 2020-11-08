@@ -145,39 +145,65 @@ int main(int argc, char* argv[])
     }
 
     if (strcmp(argv[1], "1") == 0) { // bunny case
-        youngs_modulus = 0.1; // TODO: iterate in [0.1, 1, 10, 100, 1000]
-        damping_coeff = 2;
-        // TODO: 
-        /* 
-            1. Copy the loading codes from your hw1. Fix two ears (2140, 2346) only, and you don't need helper function here.
-            2. Set the initial velocities of non_fixed_nodes to be (10, 0, 0)
-            
-            The output folder will automatically renamed by bunny_[youngs_modulus], don't worry about overwriting.
-        */
-        // 1. Copy the loading codes from your hw1.Fix two ears(2140, 2346) only, and you don't need helper function here.
-        read_point("E:\\Jack12\\cis563-pba\\proj1_explicit_mass_spring\\Projects\\mass_spring\\data\\points",
-            x);
-        read_cell("E:\\Jack12\\cis563-pba\\proj1_explicit_mass_spring\\Projects\\mass_spring\\data\\cells",
-            segments,
-            x,
-            rest_length);
+        for (T youngs_modulus : m_bunny_young_modules) {
+            m.clear();
+            x.clear();
+            v.clear();
+            node_is_fixed.clear();
 
-        // 2. Set the initial velocities of non_fixed_nodes to be (10, 0, 0)
-        numPoint = x.size();
-        TV v_non_fixed_nodes;
-        v_non_fixed_nodes << 10, 0, 0;
+            segments.clear();
+            rest_length.clear();
 
-        node_is_fixed.resize(numPoint, false);
-        v.resize(numPoint, v_non_fixed_nodes);
-        v[2140] = TV::Zero();
-        v[2346] = TV::Zero();
-        node_is_fixed[2140] = true;
-        node_is_fixed[2346] = true;
-        m.resize(numPoint, total_M / numPoint);
+            //youngs_modulus = 0.1; // TODO: iterate in [0.1, 1, 10, 100, 1000]
+            damping_coeff = 2;
+            // TODO: 
+            /*
+                1. Copy the loading codes from your hw1. Fix two ears (2140, 2346) only, and you don't need helper function here.
+                2. Set the initial velocities of non_fixed_nodes to be (10, 0, 0)
 
-        std::stringstream ss;
-        ss << std::fixed << std::setprecision(2) << youngs_modulus;
-        driver.test="bunny_"+ss.str();
+                The output folder will automatically renamed by bunny_[youngs_modulus], don't worry about overwriting.
+            */
+            // 1. Copy the loading codes from your hw1.Fix two ears(2140, 2346) only, and you don't need helper function here.
+            read_point("E:\\Jack12\\cis563-pba\\proj1_explicit_mass_spring\\Projects\\mass_spring\\data\\points",
+                x);
+            read_cell("E:\\Jack12\\cis563-pba\\proj1_explicit_mass_spring\\Projects\\mass_spring\\data\\cells",
+                segments,
+                x,
+                rest_length);
+
+            // 2. Set the initial velocities of non_fixed_nodes to be (10, 0, 0)
+            numPoint = x.size();
+            TV v_non_fixed_nodes;
+            v_non_fixed_nodes << 10, 0, 0;
+
+            node_is_fixed.resize(numPoint, false);
+            v.resize(numPoint, v_non_fixed_nodes);
+            v[2140] = TV::Zero();
+            v[2346] = TV::Zero();
+            node_is_fixed[2140] = true;
+            node_is_fixed[2346] = true;
+            m.resize(numPoint, total_M / numPoint);
+
+            std::stringstream ss;
+            ss << std::fixed << std::setprecision(2) << youngs_modulus;
+            driver.test = "bunny_" + ss.str();
+
+            driver.dt = dt;
+            driver.ms.segments = segments;
+            driver.ms.m = m;
+            driver.ms.v = v;
+            driver.ms.x = x;
+            driver.ms.target_x = x;
+            driver.ms.youngs_modulus = youngs_modulus;
+            driver.ms.damping_coeff = damping_coeff;
+            driver.ms.node_is_fixed = node_is_fixed;
+            driver.ms.rest_length = rest_length;
+
+            std::cout << "Run for Youngs module: " << driver.ms.youngs_modulus << std::endl;
+            driver.run(5);
+        }
+        
+       
     }
 
     else if (strcmp(argv[1], "2") == 0) { //brush case
@@ -233,6 +259,19 @@ int main(int argc, char* argv[])
         };
 
         driver.test="brush";
+
+        driver.dt = dt;
+        driver.ms.segments = segments;
+        driver.ms.m = m;
+        driver.ms.v = v;
+        driver.ms.x = x;
+        driver.ms.target_x = x;
+        driver.ms.youngs_modulus = youngs_modulus;
+        driver.ms.damping_coeff = damping_coeff;
+        driver.ms.node_is_fixed = node_is_fixed;
+        driver.ms.rest_length = rest_length;
+
+        driver.run(20);
     }
 
     else {
@@ -241,7 +280,18 @@ int main(int argc, char* argv[])
     }
 
     // simulate
-    
+    /*driver.dt = dt;
+    driver.ms.segments = segments;
+    driver.ms.m = m;
+    driver.ms.v = v;
+    driver.ms.x = x;
+    driver.ms.target_x = x;
+    driver.ms.youngs_modulus = youngs_modulus;
+    driver.ms.damping_coeff = damping_coeff;
+    driver.ms.node_is_fixed = node_is_fixed;
+    driver.ms.rest_length = rest_length;
+
+    driver.run(5);*/
    
 
     return 0;
