@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
             driver.ms.rest_length = rest_length;
 
             std::cout << "Run for Youngs module: " << driver.ms.youngs_modulus << std::endl;
-            driver.run(5);
+            driver.run(180);
         }
         
        
@@ -271,7 +271,7 @@ int main(int argc, char* argv[])
         driver.ms.node_is_fixed = node_is_fixed;
         driver.ms.rest_length = rest_length;
 
-        driver.run(20);
+        driver.run(180);
     }
 
     else {
