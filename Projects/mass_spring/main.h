@@ -20,4 +20,7 @@ const int dim = 3;
 using TV = Eigen::Matrix<T, dim, 1>;
 
 int numPoint = 0;
-T uniform_M = 1.0f;
+T total_M = T(1);
+//T uniform_M = 1.0f;
+
+std::vector<T> m_bunny_young_modules = {0.1f, 1.0f, 10.0f, 100.0f, 1000.0f };

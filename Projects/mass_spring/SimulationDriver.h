@@ -7,6 +7,7 @@
 #include <functional>
 
 #include <direct.h>
+#include "config.h"
 
 
 template<class T, int dim>
@@ -46,8 +47,12 @@ public:
     {
         // TODO: if you are not sure whether your computation is correct. You can run the following two functions to check f and df/dx
         //          when you run the simulation, comment out these functions.
-        // ms.checkGradient();
-        // ms.checkHessian();
+        
+#if check
+       ms.checkGradient();
+       ms.checkHessian();
+#endif
+
         T accumulate_t = 0;
 
         mkdir("output\\");
@@ -264,7 +269,7 @@ public:
                     Eigen::Matrix<T,dim,dim> C_local = collision_stiffness / sphere_radius / sphere_radius * n * n.transpose() 
                             - collision_stiffness * 2 * (1 - d/sphere_radius) / d / sphere_radius * (Eigen::Matrix<T,dim,dim>::Identity() - n * n.transpose());
                     if (project_spd)
-                        makePD(C_local);
+                        ms.makePD(C_local);
                     for (int i = 0; i < dim; i++) {
                         for (int j = 0; j < dim; j++) {
                             A.coeffRef(dim * p + i, dim * p + j) += dt * dt * C_local(i, j);

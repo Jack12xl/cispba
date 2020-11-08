@@ -1,5 +1,6 @@
 #include "main.h"
 
+#pragma region read_from_hw1
 void read_point(
     const std::string& file_path,
     std::vector<TV>& m_x
@@ -114,6 +115,8 @@ void read_cell(
     std::cout << "In all " << _segments.size() << " segments !" << std::endl;
 }
 
+#pragma endregion
+
 int main(int argc, char* argv[])
 {
     
@@ -137,7 +140,7 @@ int main(int argc, char* argv[])
 
     if (argc < 2) 
     {
-        std::cout << "Please indicate test case number: 0 (bunny) or 1 (brush)" << std::endl;
+        std::cout << "Please indicate test case number: 1 (bunny) or 2 (brush)" << std::endl;
         exit(0);
     }
 
@@ -164,12 +167,13 @@ int main(int argc, char* argv[])
         TV v_non_fixed_nodes;
         v_non_fixed_nodes << 10, 0, 0;
 
+        node_is_fixed.resize(numPoint, false);
         v.resize(numPoint, v_non_fixed_nodes);
         v[2140] = TV::Zero();
         v[2346] = TV::Zero();
         node_is_fixed[2140] = true;
         node_is_fixed[2346] = true;
-        m.resize(numPoint, uniform_M);
+        m.resize(numPoint, total_M / numPoint);
 
         std::stringstream ss;
         ss << std::fixed << std::setprecision(2) << youngs_modulus;
@@ -238,18 +242,7 @@ int main(int argc, char* argv[])
 
     // simulate
     
-    driver.dt = dt;
-    driver.ms.segments = segments;
-    driver.ms.m = m;
-    driver.ms.v = v;
-    driver.ms.x = x;
-    driver.ms.target_x = x;
-    driver.ms.youngs_modulus = youngs_modulus;
-    driver.ms.damping_coeff = damping_coeff;
-    driver.ms.node_is_fixed = node_is_fixed;
-    driver.ms.rest_length = rest_length;
-
-    driver.run(180);
+   
 
     return 0;
 }

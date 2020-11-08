@@ -44,6 +44,25 @@ public:
     MassSpringSystem()
     {}
 
+    void makePD(Eigen::Matrix<T, dim, dim>& symMtr) {
+        Eigen::SelfAdjointEigenSolver<Eigen::Matrix<T, dim, dim>> eigenSolver(symMtr);
+        if (eigenSolver.eigenvalues()[0] >= 0.0) {
+            return;
+        }
+        Eigen::DiagonalMatrix<T, dim> D(eigenSolver.eigenvalues());
+        int rows = ((dim == Eigen::Dynamic) ? symMtr.rows() : dim);
+        for (int i = 0; i < rows; i++) {
+            if (D.diagonal()[i] < 0.0) {
+                D.diagonal()[i] = 0.0;
+            }
+            else {
+                break;
+            }
+        }
+        symMtr = eigenSolver.eigenvectors() * D * eigenSolver.eigenvectors().transpose();
+
+    }
+
     void evaluateSpringForces(std::vector<TV >& f, std::vector<TV>& dx)
     {
         f.clear();
@@ -120,7 +139,17 @@ public:
         //       int B = segments[idx](1);
         //       TV xA = x[A] + dx[A];
         //       TV xB = x[B] + dx[B];
-        return TV();
+        int A = segments[idx](0);
+        int B = segments[idx](1);
+        TV xA = x[A] + dx[A];
+        TV xB = x[B] + dx[B];
+
+        // from hw1
+        T l_0 = this -> rest_length[idx];
+        T l = (xA - xB).norm();
+        TV n_12 = (xA - xB).normalized();
+
+        return -this->youngs_modulus * (l / l_0 - T(1)) * n_12; 
     }
 
     TV evaluateDampingForce(int idx, std::vector<TV>& dx, T dt) {
@@ -131,7 +160,18 @@ public:
         //       TV vA = dx[A]/dt;
         //       TV vB = dx[B]/dt;
         //       TV n = (x[A]-x[B]).normalized();
-        return TV();
+
+        int A = segments[idx](0);
+        int B = segments[idx](1);
+        TV vA = dx[A]/dt;
+        TV vB = dx[B]/dt;
+        TV n_12 = (x[A]-x[B]).normalized();
+
+        /*TV v_rel = (vA - vB).cwiseProduct(n_12);
+        return - this ->damping_coeff * v_rel.cwiseProduct(n_12);*/
+
+        TV v_rel = vA - vB;
+        return -this->damping_coeff * (n_12 * n_12.transpose() ) * v_rel;
     }
 
     TM evaluateKS(int idx, std::vector<TV>& dx, bool project_pd=true) {
@@ -144,7 +184,26 @@ public:
         //       TV xB = x[B] + dx[B];
         // Do not change the project_pd part (-Ks is projected to be PD).
 
-        TM KS; // TODO: fill this matrix
+        int A = segments[idx](0);
+        int B = segments[idx](1);
+        TV xA = x[A] + dx[A];
+        TV xB = x[B] + dx[B];
+       
+        T l = (xA - xB).norm();
+        T l_0 = this->rest_length[idx];
+
+        TV n_12 = (xA - xB).normalized();
+
+        TM nn = n_12 * n_12.transpose();
+
+        TM KS =
+            - (this->youngs_modulus *
+            (1.0f / l_0 - 1.0f / l) *
+            (TM::Identity() - nn)
+            + 
+            this->youngs_modulus / l_0 * nn);
+
+        //TM KS; // TODO: fill this matrix
 
         // write your code above and do not change the following part.
         TM neg_KS = -KS;
@@ -161,7 +220,15 @@ public:
         //       int B = segments[idx](1);
         //       TV n = (x[A]-x[B]).normalized(); 
         //       Be careful that dfA_damping/dxA = dfA_damping/dvA * dvA/dxA = 1/dt * dfA_damping/dvA
-        return TM();
+
+        // raw week5 page 47
+        int A = segments[idx](0);
+        int B = segments[idx](1);
+
+        TV n_12 = (x[A] - x[B]).normalized();
+        
+
+        return -this -> damping_coeff * n_12 * n_12.transpose() * T(1) / dt; // 
     }
 
     void checkGradient() {

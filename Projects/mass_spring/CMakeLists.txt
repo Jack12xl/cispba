@@ -13,6 +13,7 @@ set(headers
 	MassSpringSystem.h
 	SimulationDriver.h
 	utils.h
+	config.h
 )
 
 set(sources
